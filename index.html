@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" /> <!-- podłączenie leafleta cz.1-->
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script> <!-- podłączenie leafleta cz.2-->
+<link rel="stylesheet" type="text/css" href="parkic.css"> <!--podłączenie css-a. Ważne height:100vh;-->
+<link rel="stylesheet" type="text/css" href="Control.Measure.css"> <!--mierzenie-->
+
+<title>Parki w Poznaniu</title>
+
+<script src = "./parkic.js"></script>
+<script src = "./p_areal.js"></script>
+<script src = "./maska.js"></script>
+
+<script src="./Leaflet.GraphicScale.js"></script>
+<script src="./Control.Measure.js"></script>
+
+
+</head>
+
+
+
+
+<body>
+<div id="container">
+<div id="tytul">Mapa parków w Poznaniu</div>
+<div id="map"></div>
+
+<div id="window">
+</div>
+
+	</div>
+
+<script>
+
+var osmLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>',
+       otmLink = '<a href="http://opentopomap.org/">OpenTopoMap</a>';
+	 
+       
+var osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+       osmAttrib = '&copy; ' + osmLink + ' Contributors',
+       otmUrl = 'http://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+       otmAttrib = '&copy; '+otmLink+' Contributors';
+  
+var osmMap = L.tileLayer(osmUrl, {attribution: osmAttrib}),
+       otmMap = L.tileLayer(otmUrl, {attribution: otmAttrib});
+
+var b1 = L.latLng(52.55890969834556, 16.515893370015128);
+var b2 = L.latLng(52.24412636292794, 17.27165761057331);
+
+var b = L.latLngBounds(b1, b2);
+	   
+//ustawienie mapy
+var map = L.map('map', {
+					layers: [osmMap], 
+					minZoom: 10, 
+					maxBounds: b
+					})
+				.setView([52.401180226869606, 16.92710433346813], 11.5);
+
+
+map.attributionControl.addAttribution("Autorzy: Michał Czech i Mateusz Grencel <br>Measuring tool przez <a href='https://github.com/jbelien/Leaflet.Measure' target='_blank'>jbelien</a> | Graphic Scale przez <a href='https://github.com/nerik/leaflet-graphicscale' target='_blank'>nerik</a>"); //autorzy
+
+ 
+var icon_parki = L.icon({
+
+	iconUrl: './logo.png',
+	iconSize: [24, 24],
+	
+});
+
+
+var graphicScale = L.control.graphicScale(['fill']).addTo(map); /*podzialka liniowa*/
+
+L.control.measure().addTo(map); //mierzenie
+
+/*przycisk zamykajacy*/
+
+function closeButton(){
+
+	document.getElementById("window").style.display = "none";
+	document.getElementById("window").innerHTML="<button onclick='closeButton()'>X</button><br>";
+
+}
+
+function onEachFeature(feature, layer) {
+        layer.on({
+            click: openSidebar 
+         });
+		 /*przyblizanie po kliknieciu*/
+		 layer.on('click',function(e){
+	     map.setView(e.latlng, 15);
+});
+     }
+
+
+
+
+var add = L.geoJson(w,{
+    pointToLayer: function(feature,latlng){
+      return L.marker(latlng,{icon: icon_parki});
+    }, onEachFeature: onEachFeature
+	
+  }).addTo(map);
+
+  
+function styl_maski(feature){
+	
+	return{
+	
+	opacity: 0.8,
+	color: 'gray'
+	
+	
+	};
+
+
+}
+
+function styl_area(feature){
+
+
+	return{
+	
+		color: 'green'
+	
+	
+	};
+
+
+
+}
+
+
+var add_area = L.geoJson(wa, {style: styl_area});
+
+var tekst = L.geoJson(w, {pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, {radius:1});
+    },onEachFeature:function onEachFeature(feature, layer){
+
+	
+		layer.bindTooltip(
+	
+		''+feature.properties.nazwa,
+		{permanent: true,direction: "center", className: "tekst", offset: L.point({ x: 0, y:-50 })}
+		).openTooltip();
+	
+	}});
+  
+var add_mask = L.geoJson(m, {style: styl_maski}).addTo(map);
+
+map.on('zoomend', 
+	function(){
+	
+		if(map.getZoom() >= 15 && map.hasLayer(add)){
+		
+			map.removeLayer(add);
+			
+			map.addLayer(add_area);
+			map.addLayer(tekst);
+		
+		}
+	
+		if(map.getZoom() < 15 && !map.hasLayer(add)){
+		
+			map.addLayer(add);
+			
+			map.removeLayer(add_area);
+			map.removeLayer(tekst);
+		
+		}
+	
+	
+	}
+
+
+);
+
+  
+function placeImage(x)
+{
+    var div = document.getElementById("window");
+
+        var imagem=document.createElement("img");
+        imagem.src="./"+x+".png";
+        div.appendChild(imagem);
+    
+}    
+  
+function openSidebar(e) {
+
+
+
+		document.getElementById("window").innerHTML="<button onclick='closeButton()'>X</button><br>";
+		
+		var width = window.innerWidth;
+		var height = window.innerHeight;
+		
+		var mouseX = event.clientX;
+		var mouseY = event.clientY;
+		
+		var percent_X = mouseX/width;
+		var percent_Y = mouseY/height;
+		
+		if(percent_X<0.5 && percent_Y < 0.5){
+					
+			document.getElementById("window").setAttribute("class","window0");	
+		
+		}
+		
+		else if(percent_X>=0.5 && percent_Y >= 0.5){
+		
+			
+			document.getElementById("window").setAttribute("class","window2");		
+		
+		}
+		
+		else if(percent_X >= 0.5 && percent_Y < 0.5){
+		
+			
+			document.getElementById("window").setAttribute("class","window3");		
+		
+		}
+		
+		else if(percent_X <0.5 && percent_Y >= 0.5){
+			
+			document.getElementById("window").setAttribute("class","window4");		
+		
+		}
+		
+		document.getElementById("window").setAttribute("style","width:30%");
+		document.getElementById("window").style.display = "block";
+
+		
+		for(i=1; i<=45; i++){
+		
+			if(e.target.feature.properties.id==i){
+			
+				placeImage(i);
+				
+				var d = document.getElementById("window");
+				var adr = document.createElement("p");
+				adr.textContent="Adres: "+e.target.feature.properties.adres;
+				adr.setAttribute("id", "adres1");
+				d.appendChild(adr);
+				
+				var w = document.getElementById("window");
+				var powi = document.createElement("p");
+				powi.textContent="Pow.: "+e.target.feature.properties.pow;
+				powi.setAttribute("id", "pow1");
+				w.appendChild(powi);
+
+				
+				var f = document.getElementById("window");
+				var dat = document.createElement("p");
+				dat.textContent="Data zał.: "+e.target.feature.properties.data;
+				dat.setAttribute("id", "data1");
+				f.appendChild(dat);
+				
+				break;
+			
+			}
+			
+			
+		}
+		
+		
+    }
+
+var baseLayers = {
+	"OSM": osmMap,
+	"Topograficzna": otmMap
+	    };
+		
+L.control.layers(baseLayers).addTo(map);
+	
+</script>
+
+
+</body>
+
+</html>
