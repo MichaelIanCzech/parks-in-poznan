@@ -10,6 +10,8 @@ Project might be published and used only under following conditions:
 1. Non commercian and non profit use only
 2. Clearly added information about authors (Michal Czech and Mateusz Grencel) with the link to the github.com repository
 
+Used licences:
+
 Measuring tool by jbelien, link: https://github.com/jbelien/Leaflet.Measure
 
 MIT License
